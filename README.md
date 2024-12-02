@@ -1,4 +1,3 @@
 # 🌌 StarryScope
 
-### ♍️ Virgo
-![virgo](https://github.com/user-attachments/assets/89350f4e-3f5b-4326-870d-ae586d291310)
+https://github.com/user-attachments/assets/2829be16-ee69-4978-a921-72962f9068d8
