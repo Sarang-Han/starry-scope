@@ -9,13 +9,15 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.saranghan.starryscope"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.saranghan.starryscope"
     },
     "web": {
       "bundler": "metro",
@@ -36,6 +38,9 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "assets": [
+      "assets/models/*"
+    ]
   }
 }
