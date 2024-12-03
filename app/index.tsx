@@ -7,46 +7,60 @@ import { Asset } from 'expo-asset';
 import { Object3D, MeshPhysicalMaterial } from 'three';
 import { StarField } from '../components/StarField';  // StarField 컴포넌트 import
 
-function VirgoModel() {
+// 모델 import 객체 생성
+const zodiacModels = {
+  Aries: require('../assets/models/Aries.glb'),
+  Taurus: require('../assets/models/Taurus.glb'),
+  Gemini: require('../assets/models/Gemini.glb'),
+  Cancer: require('../assets/models/Cancer.glb'),
+  Leo: require('../assets/models/Leo.glb'),
+  Virgo: require('../assets/models/Virgo.glb'),
+  Libra: require('../assets/models/Libra.glb'),
+  Scorpius: require('../assets/models/Scorpius.glb'),
+  Sagittarius: require('../assets/models/Sagittarius.glb'),
+  Capricornus: require('../assets/models/Capricornus.glb'),
+  Aquarius: require('../assets/models/Aquarius.glb'),
+  Pisces: require('../assets/models/Pisces.glb')
+} as const;
+
+// 별자리 모델 생성을 위한 공통 컴포넌트
+function ZodiacModel({ name, angle }: { name: keyof typeof zodiacModels; angle: number }) {
   const [modelUri, setModelUri] = useState<string | null>(null);
   const modelRef = useRef<Object3D>();
 
   useEffect(() => {
     async function loadModel() {
       try {
-        const asset = Asset.fromModule(require('../assets/models/Virgo.glb'));
+        const asset = Asset.fromModule(zodiacModels[name]);
         await asset.downloadAsync();
         setModelUri(asset.localUri || asset.uri);
       } catch (error) {
-        console.error('model error:', error);
+        console.error(`${name} model error:`, error);
       }
     }
     loadModel();
-  }, []);
+  }, [name]);
 
   const gltf = modelUri ? useLoader(GLTFLoader, modelUri) : null;
 
   useEffect(() => {
     if (gltf) {
       const glassMaterial = new MeshPhysicalMaterial({
-        // 기본 재질 설정
-        roughness: 0.5,           // 약간 더 매끄럽게
-        transmission: 0.9,        // 투명도 증가
+        roughness: 0.5,
+        transmission: 0.9,
         thickness: 0.3,
         clearcoat: 1,
         clearcoatRoughness: 0.1,
         ior: 1.5,
-        envMapIntensity: 1.4,     // 환경 반사 증가
-        metalness: 0.4,           // 메탈릭 효과 증가
+        envMapIntensity: 1.4,
+        metalness: 0.4,
         transparent: true,
         opacity: 0.65,
-
-        // 색상 설정
-        color: '#ECE0F8',         // 기본 색상
-        emissive: '#ECE0F8',      // 하이라이트 색상
-        emissiveIntensity: 0.1,   
-        attenuationColor: '#193d7c', 
-        attenuationDistance: 0.3, 
+        color: '#ECE0F8',
+        emissive: '#ECE0F8',
+        emissiveIntensity: 0.1,
+        attenuationColor: '#193d7c',
+        attenuationDistance: 0.3,
       });
 
       gltf.scene.traverse((child: any) => {
@@ -54,8 +68,16 @@ function VirgoModel() {
           child.material = glassMaterial;
         }
       });
+
+      const radius = 8; // 원형 배치 반경
+      const radian = (angle * Math.PI) / 180; // 각도를 라디안으로 변환
+      gltf.scene.position.x = radius * Math.cos(radian);
+      gltf.scene.position.z = radius * Math.sin(radian);
+      
+      // 중심을 바라보도록 y축 회전
+      gltf.scene.rotation.y = radian + 6;
     }
-  }, [gltf]);
+  }, [gltf, angle]);
 
   useFrame((state) => {
     if (modelRef.current) {
@@ -67,66 +89,43 @@ function VirgoModel() {
   return <primitive ref={modelRef} object={gltf.scene} />;
 }
 
+// 모든 별자리 모델을 렌더링하는 컴포넌트
+function ZodiacModels() {
+  const zodiacSigns = Object.keys(zodiacModels) as Array<keyof typeof zodiacModels>;
+
+  return (
+    <>
+      {zodiacSigns.map((sign, index) => (
+        <ZodiacModel
+          key={sign}
+          name={sign}
+          angle={index * 30} // 30도씩 간격
+        />
+      ))}
+    </>
+  );
+}
+
 export default function App() {
   return (
     <Canvas
       shadows
       camera={{ 
-        position: [0, 1, 4],
-        fov: 45 
+        position: [0, 1, 0], // 중앙에 위치
+        fov: 30 // 시야각
       }}
       style={{ width: '100%', height: '100%', background: '#000514' }}
     >
-      {/* 배경 스타필드 추가 */}
       <StarField />
-
       <ambientLight intensity={6.6} color="#ffffff" />
-      
-      <directionalLight
-        position={[3, 8, 4]}
-        intensity={3.5}
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-bias={-0.0001}
-        color="#ffffff"
-      >
-        <orthographicCamera 
-          attach="shadow-camera"
-          left={-10}
-          right={10}
-          top={10}
-          bottom={-10}
-        />
-      </directionalLight>
-
-      {/* 반사 효과를 위한 추가 조명 */}
-      <pointLight
-        position={[0, 2, 6]}
-        intensity={3}
-        color="#ffffff"
+      <directionalLight position={[3, 8, 4]} />
+      <OrbitControls 
+        enableZoom={false}
+        enablePan={false}
+        minPolarAngle={Math.PI / 2}
+        maxPolarAngle={Math.PI / 2}
       />
-      
-      {/* 반짝임 효과를 위한 스포트라이트 */}
-      <spotLight
-        position={[-5, 5, 0]}
-        intensity={2}
-        angle={0.5}
-        penumbra={1}
-      />
-
-      <Suspense fallback={null}>
-        <VirgoModel />
-        <OrbitControls 
-          enableZoom={true}
-          minDistance={3}
-          maxDistance={8}
-          target={[0, 0, 0]}
-          minAzimuthAngle={-Math.PI / 4}
-          maxAzimuthAngle={Math.PI / 4}
-          minPolarAngle={Math.PI / 4}
-          maxPolarAngle={Math.PI / 2}
-        />
-      </Suspense>
+      <ZodiacModels />
     </Canvas>
   );
 }
