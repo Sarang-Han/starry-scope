@@ -1,8 +1,8 @@
 import { Canvas } from '@react-three/fiber';
 import { useLoader, useFrame } from '@react-three/fiber';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { Suspense, useRef, useEffect, useState } from 'react';
-import { OrbitControls } from '@react-three/drei';
+import { useRef, useEffect, useState } from 'react';
+import { OrbitControls, Html } from '@react-three/drei';
 import { Asset } from 'expo-asset';
 import { Object3D, MeshPhysicalMaterial } from 'three';
 import { StarField } from '../components/StarField';  // StarField 컴포넌트 import
@@ -21,6 +21,22 @@ const zodiacModels = {
   Capricornus: require('../assets/models/Capricornus.glb'),
   Aquarius: require('../assets/models/Aquarius.glb'),
   Pisces: require('../assets/models/Pisces.glb')
+} as const;
+
+// 별자리 날짜 정보 정의
+const zodiacDates = {
+  Aries: '3/21 ~ 4/19',
+  Taurus: '4/20 ~ 5/20',
+  Gemini: '5/21 ~ 6/21',
+  Cancer: '6/22 ~ 7/22',
+  Leo: '7/23 ~ 8/22',
+  Virgo: '8/23 ~ 9/22',
+  Libra: '9/23 ~ 10/22',
+  Scorpius: '10/23 ~ 11/21',
+  Sagittarius: '11/22 ~ 12/21',
+  Capricornus: '12/22 ~ 1/19',
+  Aquarius: '1/20 ~ 2/18',
+  Pisces: '2/19 ~ 3/20'
 } as const;
 
 // 별자리 모델 생성을 위한 공통 컴포넌트
@@ -57,7 +73,7 @@ function ZodiacModel({ name, angle, position = [0, 0, 0] }: { name: keyof typeof
         metalness: 0.4,
         transparent: true,
         opacity: 0.65,
-        color: '#ECE0F8',
+        color: '#CECEF6',
         emissive: '#ECE0F8',
         emissiveIntensity: 0.1,
         attenuationColor: '#193d7c',
@@ -96,7 +112,42 @@ function ZodiacModel({ name, angle, position = [0, 0, 0] }: { name: keyof typeof
   });
 
   if (!gltf) return null;
-  return <primitive ref={modelRef} object={gltf.scene} />;
+
+  const radius = 8; // 원형 배치 반경
+  const radian = (angle * Math.PI) / 180; // 각도를 라디안으로 변환
+
+  return (
+    <group>
+      <primitive ref={modelRef} object={gltf.scene} />
+      <Html
+        position={[
+          (radius * Math.cos(radian)) + position[0],
+          1.2,
+          (radius * Math.sin(radian)) + position[2]
+        ]}
+        center
+        style={{
+          color: 'white',
+          textAlign: 'center',
+          fontSize: '1em',
+          userSelect: 'none',
+          whiteSpace: 'nowrap', // 줄바꿈 방지
+          textShadow: '0 0 10px rgba(0,0,0,0.5)'
+        }}
+      >
+        <div>
+          <div>{name}</div>
+          <div style={{ 
+            fontSize: '0.8em',
+            marginTop: '0.2em',
+            minWidth: '120px' // 텍스트 영역 최소 너비 설정
+          }}>
+            {zodiacDates[name].replace('~', ' ~ ')} {/* ~ 앞뒤로 공백 추가 */}
+          </div>
+        </div>
+      </Html>
+    </group>
+  );
 }
 
 // 모든 별자리 모델을 렌더링하는 컴포넌트
@@ -123,7 +174,7 @@ export default function App() {
       shadows
       camera={{ 
         position: [0, 1, 0], // 중앙에 위치
-        fov: 30 // 시야각
+        fov: 28 // 시야각
       }}
       style={{ width: '100%', height: '100%', background: '#000514' }}
     >
