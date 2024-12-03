@@ -6,6 +6,9 @@ import { OrbitControls, Html } from '@react-three/drei';
 import { Asset } from 'expo-asset';
 import { Object3D, MeshPhysicalMaterial } from 'three';
 import { StarField } from '../components/StarField';  // StarField 컴포넌트 import
+import { Audio } from 'expo-av';
+import { TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 // 모델 import 객체 생성
 const zodiacModels = {
@@ -31,8 +34,8 @@ const zodiacDates = {
   Cancer: '6/22 ~ 7/22',
   Leo: '7/23 ~ 8/22',
   Virgo: '8/23 ~ 9/22',
-  Libra: '9/23 ~ 10/22',
-  Scorpius: '10/23 ~ 11/21',
+  Libra: '9/23 ~ 10/23',
+  Scorpius: '10/24 ~ 11/21',
   Sagittarius: '11/22 ~ 12/21',
   Capricornus: '12/22 ~ 1/19',
   Aquarius: '1/20 ~ 2/18',
@@ -168,26 +171,91 @@ function ZodiacModels() {
   );
 }
 
+function AudioPlayer() {
+  const [sound, setSound] = useState<Audio.Sound>();
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  async function loadSound() {
+    const { sound } = await Audio.Sound.createAsync(
+      require('../assets/music/space.mp3'),
+      { isLooping: true }
+    );
+    setSound(sound);
+  }
+
+  useEffect(() => {
+    loadSound();
+    return () => {
+      sound?.unloadAsync();
+    };
+  }, []);
+
+  const togglePlay = async () => {
+    if (!sound) return;
+    
+    if (isPlaying) {
+      await sound.pauseAsync();
+    } else {
+      await sound.playAsync();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  return (
+    <TouchableOpacity 
+      onPress={togglePlay}
+      style={styles.button}
+    >
+      <Ionicons 
+        name={isPlaying ? "pause" : "play"} // 아이콘 변경
+        size={32} // 크기 증가
+        color="white" 
+      />
+    </TouchableOpacity>
+  );
+}
+
+const styles = StyleSheet.create({
+  button: {
+    position: 'absolute',
+    top: 40, // 상단에서 더 멀리
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // 배경색 더 진하게
+    borderRadius: 25, // 더 둥글게
+    width: 50, // 더 크게
+    height: 50, // 더 크게
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    zIndex: 1000, // 최상단에 표시
+    elevation: 5, // Android에서 그림자 효과
+  }
+});
+
 export default function App() {
   return (
-    <Canvas
-      shadows
-      camera={{ 
-        position: [0, 1, 0], // 중앙에 위치
-        fov: 28 // 시야각
-      }}
-      style={{ width: '100%', height: '100%', background: '#000514' }}
-    >
-      <StarField />
-      <ambientLight intensity={6.6} color="#ffffff" />
-      <directionalLight position={[3, 8, 4]} />
-      <OrbitControls 
-        enableZoom={false}
-        enablePan={false}
-        minPolarAngle={Math.PI / 2}
-        maxPolarAngle={Math.PI / 2}
-      />
-      <ZodiacModels />
-    </Canvas>
+    <>
+      <AudioPlayer />
+      <Canvas
+        shadows
+        camera={{ 
+          position: [0, 1, 0], // 중앙에 위치
+          fov: 31 // 시야각
+        }}
+        style={{ width: '100%', height: '100%', background: '#000514' }}
+      >
+        <StarField />
+        <ambientLight intensity={6.6} color="#ffffff" />
+        <directionalLight position={[3, 8, 4]} />
+        <OrbitControls 
+          enableZoom={false}
+          enablePan={false}
+          minPolarAngle={Math.PI / 2}
+          maxPolarAngle={Math.PI / 2}
+        />
+        <ZodiacModels />
+      </Canvas>
+    </>
   );
 }
