@@ -27,6 +27,7 @@ const zodiacModels = {
 function ZodiacModel({ name, angle }: { name: keyof typeof zodiacModels; angle: number }) {
   const [modelUri, setModelUri] = useState<string | null>(null);
   const modelRef = useRef<Object3D>();
+  const ROTATION_SPEED = 0.6; // 로테이션 속도
 
   useEffect(() => {
     async function loadModel() {
@@ -81,7 +82,12 @@ function ZodiacModel({ name, angle }: { name: keyof typeof zodiacModels; angle: 
 
   useFrame((state) => {
     if (modelRef.current) {
+      // 기존 상하 움직임 유지
       modelRef.current.position.y = Math.sin(state.clock.elapsedTime) * 0.16;
+      
+      // 모델 자체 회전 추가 (y축)
+      const radian = (angle * Math.PI) / 180;
+      modelRef.current.rotation.y = radian + Math.PI + (state.clock.elapsedTime * ROTATION_SPEED);
     }
   });
 
