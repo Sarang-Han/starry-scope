@@ -42,11 +42,31 @@ const zodiacDates = {
   Pisces: '2/19 ~ 3/20'
 } as const;
 
+// 2D 텍스트 박스 컴포넌트
+const TextBox = ({ position, text }: { position: [number, number, number]; text: string }) => {
+  return (
+    <Html position={position} style={{ pointerEvents: 'none' }}>
+      <div style={{
+        backgroundColor: 'white',
+        padding: '15px',
+        borderRadius: '8px',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+        width: '200px',
+        textAlign: 'center',
+        transform: 'translate(-50%, -50%)'
+      }}>
+        {text}
+      </div>
+    </Html>
+  );
+};
+
 // 별자리 모델 생성을 위한 공통 컴포넌트
 function ZodiacModel({ name, angle, position = [0, 0, 0] }: { name: keyof typeof zodiacModels; angle: number; position?: number[] }) {
   const [modelUri, setModelUri] = useState<string | null>(null);
   const modelRef = useRef<Object3D>();
   const ROTATION_SPEED = 0.6; // 로테이션 속도
+  const [isClicked, setIsClicked] = useState(false);
 
   useEffect(() => {
     async function loadModel() {
@@ -86,6 +106,8 @@ function ZodiacModel({ name, angle, position = [0, 0, 0] }: { name: keyof typeof
       gltf.scene.traverse((child: any) => {
         if (child.isMesh) {
           child.material = glassMaterial;
+          // Mesh를 클릭 가능하게 설정
+          child.userData = { clickable: true };
         }
       });
 
@@ -98,7 +120,11 @@ function ZodiacModel({ name, angle, position = [0, 0, 0] }: { name: keyof typeof
       gltf.scene.position.z = (radius * Math.sin(radian)) + position[2];
       
       // 중심을 바라보도록 y축 회전
-      gltf.scene.rotation.y = radian + Math.PI;
+      const rotationAngle = Math.atan2(
+        gltf.scene.position.x,
+        gltf.scene.position.z
+      );
+      gltf.scene.rotation.y = rotationAngle;
     }
   }, [gltf, angle, position]);
 
@@ -114,6 +140,21 @@ function ZodiacModel({ name, angle, position = [0, 0, 0] }: { name: keyof typeof
     }
   });
 
+  interface ClickEvent extends React.MouseEvent {
+    object: {
+      userData?: {
+        clickable?: boolean;
+      };
+    };
+  }
+
+  const handleClick = (event: ClickEvent) => {
+    event.stopPropagation();
+    if (event.object.userData?.clickable) {
+      setIsClicked(!isClicked);
+    }
+  };
+
   if (!gltf) return null;
 
   const radius = 8; // 원형 배치 반경
@@ -121,7 +162,11 @@ function ZodiacModel({ name, angle, position = [0, 0, 0] }: { name: keyof typeof
 
   return (
     <group>
-      <primitive ref={modelRef} object={gltf.scene} />
+      <primitive 
+        ref={modelRef} 
+        object={gltf.scene} 
+        onClick={handleClick}
+      />
       <Html
         position={[
           (radius * Math.cos(radian)) + position[0],
@@ -149,6 +194,18 @@ function ZodiacModel({ name, angle, position = [0, 0, 0] }: { name: keyof typeof
           </div>
         </div>
       </Html>
+      {isClicked && (
+        <>
+          <TextBox 
+            position={[
+              gltf.scene.position.x,
+              gltf.scene.position.y - 1.5,
+              gltf.scene.position.z
+            ]}
+            text="Text Box"
+          />
+        </>
+      )}
     </group>
   );
 }
@@ -244,6 +301,9 @@ export default function App() {
           fov: 31 // 시야각
         }}
         style={{ width: '100%', height: '100%', background: '#000514' }}
+        onCreated={({ gl }) => {
+          gl.domElement.style.touchAction = 'none';
+        }}
       >
         <StarField />
         <ambientLight intensity={6.6} color="#ffffff" />
