@@ -21,6 +21,7 @@
     "@react-three/drei": "^9.119.0",
     "@react-three/fiber": "^8.17.10",
     "expo": "~52.0.11",
+    "expo-av": "~15.0.1",
     "expo-blur": "~14.0.1",
     "expo-constants": "~17.0.3",
     "expo-font": "~13.0.1",
@@ -42,8 +43,7 @@
     "react-native-screens": "~4.1.0",
     "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.2",
-    "three": "^0.166.1",
-    "expo-av": "~15.0.1"
+    "three": "^0.171.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
