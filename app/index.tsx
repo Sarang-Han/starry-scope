@@ -2,6 +2,7 @@ import { Canvas } from '@react-three/fiber';
 import { useLoader, useFrame } from '@react-three/fiber';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { useRef, useEffect, useState } from 'react';
+import * as THREE from 'three';
 import { OrbitControls, Html } from '@react-three/drei';
 import { Asset } from 'expo-asset';
 import { Object3D, MeshPhysicalMaterial } from 'three';
@@ -67,6 +68,21 @@ function ZodiacModel({ name, angle, position = [0, 0, 0] }: { name: keyof typeof
   const modelRef = useRef<Object3D>();
   const ROTATION_SPEED = 0.6; // 로테이션 속도
   const [isClicked, setIsClicked] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const scale = useRef(1);
+
+  useFrame((state, delta) => {
+    if (!modelRef.current) return;
+    
+    // 호버링 시 scale 애니메이션
+    if (isHovered) {
+      scale.current = THREE.MathUtils.lerp(scale.current, 1.1, 0.1);
+    } else {
+      scale.current = THREE.MathUtils.lerp(scale.current, 1, 0.1);
+    }
+    
+    modelRef.current.scale.setScalar(scale.current);
+  });
 
   useEffect(() => {
     async function loadModel() {
@@ -166,6 +182,8 @@ function ZodiacModel({ name, angle, position = [0, 0, 0] }: { name: keyof typeof
         ref={modelRef} 
         object={gltf.scene} 
         onClick={handleClick}
+        onPointerOver={() => setIsHovered(true)}
+        onPointerOut={() => setIsHovered(false)}
       />
       <Html
         position={[
