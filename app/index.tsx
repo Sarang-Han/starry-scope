@@ -199,7 +199,8 @@ function ZodiacModel({ name, angle, position = [0, 0, 0] }: { name: keyof typeof
           <TextBox 
             position={[
               gltf.scene.position.x,
-              gltf.scene.position.y - 1.5,
+              // Capricornus일 때는 더 높은 위치에 텍스트박스 배치
+              gltf.scene.position.y + (name === 'Capricornus' ? -0.5 : -1.5),
               gltf.scene.position.z
             ]}
             text="Text Box"
